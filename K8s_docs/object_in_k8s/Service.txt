@@ -1,0 +1,109 @@
+k8s services enable communication between various components within and outside of cluster.
+services enable conectivity between pods. front-end pod made available to users, communication between backend and frontend pods. establish connection to external DB.
+In k8s cluster every node will have an IP, every pod will have an IP and pod are in seperate network so we can't directly access pod.so to access Pod we need to 
+shh(considering user and k8s cluster is in same network) inside of cluster and ping the pod with its IP. This is not what we want. security issues, complex process.
+need some abstraction that helps us connect to pods.
+Service has types:
+  1. Node port: which listen to a port on node (browse- nodeIP:portno) and redirect req to matching pod. (it opens a port in range of 30-32767)
+  2. ClusterIP: creates a virtual ip that enables communication between diff. services in cluster.
+  3. LB: It provision a LB for our application.
+  
+NodePort:
+  Helps mapping port on node to port on pod.
+  here we have a target port (port on pod)---mapped to port in service which is mapped to clusterIP of service(Service is live a virtual server which has its own IP), and then
+  we have port on the node(NodePort-physical port)
+  
+apiVersion: v1
+kind: Service
+metadata:
+   name: myapp-service
+   labels:
+      app: myapp
+	  type: frontend
+spec:
+   type: NodePort
+   ports:
+     - targetPort: 80 (depends on image where port is written)?
+	   port: 80
+	   nodePort: 30008
+   selectors:
+       app: myapp
+	   type: frontend (these are pod lables from pod defination file)
+	 
+kubectl apply -f <filename>
+kubectl get svc    (here u will get a clusterIP and port no) 
+kubectl get svc <svc name> -o yaml
+kubectl describe svc <svc name>
+this service is mapped to a single pod but if there are multiple pods with same labels, then service will forward req to any matching pod no need for any configuration.
+(algo for balancing load - Random with session affinity: yes)
+Here we get a port for a node but what if the pods are on different node? k8s internally creates a service which mappes target port same nodeport in cluster.
+so u can access with any node IP and same nodeport.
+
+ClusterIP:
+ In a multi-tier app we have front-end, backend, DB pods and they need to communicate to each other.
+ pods have IP and can communicate with each other but pods are static(die and gets created so ip changes).
+ And there are multiple instances of one pod then to which to connect? service gives a single endpoint to connect. 
+ so will create service for diff. pods(front-end,backend,db), service gets an IP and name which is used to connect to those pod via service.
+ 
+apiVersion: v1
+kind: Service
+metadata:
+   name: myapp-backend
+   labels:
+      app: myapp
+	  type: backend
+spec:
+   type: ClusterIP  (Its optional - by default its ClusterIP)
+   ports:
+     - targetPort: 80 (depends on image where port is written)?
+	   port: 80
+   selectors:
+       app: myapp
+	   type: backend (these are pod lables from pod defination file)
+ 
+kubectl get svc (with clusterIP/service name pods can communicate)
+ 
+LB:
+With multiple nodes in a cluster and multiple ports (for diffrent pods) there will be multiple URLs but we need one single Url to access pods.
+We need any loadbalancer (nginx,f5) installed for on-prem cluster or can use LB service of clouds provider if our cluster is on cloud.
+without actual LB, service LB works as NOdePort only.
+
+apiVersion: v1
+kind: Service
+metadata: 
+    name: myapp-service
+spec:
+   type: LoadBalancer
+   ports:
+    - targetPort: 80
+	  port: 80
+	  NodePort: 30008
+   selectors:
+      app: myapp
+	  type:
+
+
+*Note- k8s Creates a clusterIp type serviec initially
+*After creating a service there is one dns entry in k8s happens automatically (<service-name>.<namespace>.svc.cluster.local) 
+       cluster.local - default domain name of cluster
+	   svc - sub domain for service.
+	   
+*Note- How kubectl apply works internally ?
+       kubectl create/replace are imperative cmds as it can fail if resource is already created(kubectl create) or not created alredy(replace)
+	   but kubectl apply (its declarative) understand and either create or update/replace the resource.
+	  -When u create an object k8s with imperative way it create a live copy (stored in k8s memory)of that obj. but with apply cmd it also create json file with last applied conf.    
+       then for every new apply local file(written by user) and live copy is compared for chnages. live cpoy is updates and creates onj. and then it update the json file.
+	   the json file is actually stored in live copy as annotation as last applied.
+	   
+    	  
+
+
+
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 

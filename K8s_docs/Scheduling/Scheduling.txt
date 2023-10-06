@@ -1,0 +1,118 @@
+
+1.Manually scheduling a pod.
+  when u dont have a scheduler or don't want build in scheduler?
+    in pod defination/manifest file the nodeNmae: filed is not set by-default k8s add it automatically. scheduler looks for pod without nodeName and by scheduling algo it schedule 
+	the pod on some node and add its name in pod manifest file. without scheduler pod will be in pending state. so manually write nodeName: node01 field inside spec.
+	u can't change node for alredy scheduled pod directly, delete the pod and make chnages to manifest file and apply. OR need to create object of kind "Binding".
+	-> kubectl replace --force -f filename.yaml (no need to delete pod manually and apply does it automatically).
+	
+	
+2.Taint and tolerations
+Taints are applied on nodes and toleration is given to pods.
+kubectl taint nodes <node name> key=value:<taint-effect> 
+ taint-effect means what will hapen to the pod that do not tolerate the taint? 
+   NoSchedule - k8s will not schedule pod on node
+   PrefereNoSchedulec - k8s try not to schedule but no gaurenty 
+   NoExecute - new pod not get schedule and old pods will be evicted.
+e.g kubectl taint nodes node01 app=blue:NoSchedule
+    kubectl taint nodes node01 app=blue:NoSchedule- (add - as suffix to remove/untain the node)
+
+tolerations are added to pod
+apiVersion: v1
+kind: Pod
+metadata:
+   name: myapp
+   type: frontend
+spec:
+   containers:
+   - name: nginx-container
+     image: nginx
+   
+   tolerations:
+   - key: "app"
+     operator: "Equal"
+     value: "blue"
+     effect: "NoSchedule"
+
+pod with tolerations can be placed on tainted or no-tainted nodes. taint only restrict node to allow/deny certain pods.
+controleplane by default has a taint which restrict pod to get schedule on it. (NoSchedule)
+kubectl get nodes 
+kubectl describe node <node-name> | grep Taint
+kubectl top nodes (to get cpu/memory info of nodes)  ------needs metrics server (which allow metrics API) deployed for this.
+ubectl describe node node01 | grep -i taints (to see taints)
+
+3.Node Selectors
+When we want to place a pod on particuler node. why? node with higher resource should have a pod with higher computational/resource requirement.
+
+apiVersion: v1
+kind: Pod
+metadata: 
+  name: myapp
+  
+spec:
+   containers:
+     - name: myapp-container
+	   image: nginx
+	   
+   nodeSelector:
+     size: Large   ----------(this is label on node)
+	 
+	 
+Labeling the node - kubectl label nodes <node-name> <label-key>=<label-value>
+                    kubectl label nodes node01 size=Large
+Other pods will work as usual, node with label can have pod with or without nodeselector					
+*With nodeSelector we can select only one node at a time. Can't provide OR/AND conditions
+
+
+4.Node Affinity
+To host pod on particular nodes. here we can have OR/AND condition to select from multiple nodes.
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: myapp
+spec: 
+  containers:
+   - name: myapp-container
+     image: nginx
+  affinity:
+    nodeAffinity:
+	  requiredDuringSchedulingIgnoredDuringExecution:
+	    nodeSelectorTerms:
+		- matchExpressions:
+		  - key: size
+		    operator: In
+			values:
+			- Large
+			- Medium
+			
+*In consider values list(Large, Medium ---these are node labels) it will place on Large or Medium
+*NotIn ---it will place pod other than value in list
+*Exists --- use when only key, it just checks if key is present with any value
+  affinity:
+    nodeAffinity:
+	  requiredDuringSchedulingIgnoredDuringExecution:
+	    nodeSelectorTerms:
+		- matchExpressions:
+		  - key: size
+		    operator: Exists
+		
+			
+There a multiple operators ---In, NotIn, Exists (google their syntax and info)
+
+What if labels not exist? 
+- then it depends on node type affinity. 
+   1. requiredDuringSchedulingIgnoredDuringExecution - here node needs to have matching labels or pod will not be scheduled, will be in pending state.
+   2. preferredDuringSchedulingIgnoredDuringExecution - if matching labels are not present then it wil schedule pod on any node.it will ignore affinity
+  * Once pods are scheduled on a node then change in node label won't affect pod execution. it will run fine.(IgnoredDuringExecution)
+  *Chossing type affinity depends on priority if pod placement is imp or executing/running the pod is.
+  
+   3. requiredDuringSchedulingRequiredDuringExecution - will evict pod that does not match affinity rules.
+   
+ 
+============Node Affinity vs Taints and Tolerations =====================
+*Node affinity gaurenties you that pod with node affinity will go to that node but that node can have other pods also.
+*Taints and Tolerations gaurenties that no other pod can go to tainted node but pod with toleration can end up on node without tains also.
+So to gaurentee pod on specific node at all cost is with combination of both concepts.
+
+

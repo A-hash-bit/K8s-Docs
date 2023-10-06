@@ -1,0 +1,43 @@
+
+ Pods - *smallest object in k8s. Can't run container directly on k8s so needs to wrap container inside pod. 
+         * generally one pod have one container, but sometimes need a helping container along with main container then will have more than one conatiner in a pod. helper container known as side car containers.
+		   Inside same pod containers can communicate with each with localhost as they share the same network space and same storage space. side car dies with main containers no need to kill it manually.
+		 -> kubectl run <pod name> --image <image-name:tag> , kubectl get pods -n <namespace>, kubectl describe po <pod-name> -n <namespace>
+ 
+=========================
+apiVersion: v1
+kind: Pod
+metadata:
+   name: myapp-pod
+   labels:
+       app: myapp
+       type: front-end
+
+spec:
+  containers:
+    -name: my-nginx
+     image: nginx
+
+
+
+run - kubectl create -f <filename.yaml> for first time
+      kubectl apply -f <filename.yaml> for changes or first time also
+ kubectl config get-contexts cmd to get current context(current name space)
+ kubectl get po -o wide
+ kubectl get pod webapp -o yaml /  kubectl get pod webapp -o yaml > <any filename> to get webapp.yaml file info in yaml format
+ kubectl run redis --image=redis123 --dry-run=client -o yaml > redis-definition.yaml (to get pod definition file in yaml format)
+ kubectl edit pod <pod-name>
+ kubectl delete pod <pod name>
+ kubectl replace --force -f filename.yaml (no need to delete pod manually and apply does it automatically).
+kubectl get pods --selector app=myapp
+kubectl get pods --selector app=myapp,env=dev --no-headers | wc -l
+=======================================
+Kind can be (pod,service,replicaset,deployment)
+With kind pod we can create one instance of any container not more. (Replication controller/replicaset used to create multiple instances)
+metadata is a dictnory and have perticular set of keys: name,labels etc..
+  name: req to find by other objects
+  labels: req to group and find similar pods for debugging/troubleshooting and used by other object to work on cretain pods. its a dict and can have any key.(app,type...etc).
+spec: is a dict. 
+  containers: is a list (can have multiple cont.)
+     name: container name
+     image: (if u are not using image from dockerhub then give the full path of that repo.)

@@ -1,0 +1,87 @@
+K8s
+
+components:
+On Master
+1.kube api-server - helps communication between user and k8s cluster by exposing api, inter communication between all matser components, communication between master and worker nodes 
+2. kube controller manager
+   2.1 node controler - scheduling/re-scheduling/health of worker nodes
+   2.2 replication controller - keeping desired state of pod count
+3.etcd cluster - data base of all things on cluster 
+4.kube scheduler - decide on which node to schedule pod
+
+On Worker Nodes
+1. kubelet - communication between master and worker, gather info of pods.
+2. kube-proxy - communication between nodes on same and different nodes.
+3. container runtime (docker, containerD, RKT(rocket)) - to run containers.
+
+*Docker as runtime works with k8s by default(K8s was built specifically for docker) but other runtime needs CRI (container runtime interface) to work with k8s 
+ All runtime need to adhere to OCI(Open runtime Initiative) 
+     OCI - contains 1. imagespec - defines how image should be built
+	                2. runtimespec - how any runtime should be developed 
+	Docker came before OCI so k8s uses dockershim (its a hack) to support docker without OCI till v1.24, Docker images were build on OCI so works with k8s.	
+	
+* Docker is not just a runtime but consists CLI,API,BUILD,Vol,Auth,Security, runc (docker runtime) which then became containerd which is OCI specific.
+  Now containerd is a seperate project works without docker (with docker we use docker run cmd, but now for containerd we use ctr)
+    *ctr is not user friendly and limited in use 1. ctr images pull <imagename:tag> 2. ctr run <img> mostly used for debugging, not for prod env.
+	*good alternative to ctr is nerdctl its docker like for contd. , support docker comppose.
+	      *support Encripted container images.
+		  *lazy pulling
+		  *P2P image distribution
+		  *image signing and verifying
+		  *namespace in k8s 
+	just use nerdctl insted of docker. remaining cmd is same
+*crictl - its a cmd line tool for any CRI runtime. just for debugging, not to create cont. (need to install it seperately)
+    other that cont, images it understand pods also.
+	
+	
+1.ETCD
+ distributed reliable key-value store, simple, secure and fast (u can download etcd binary, install and run it on any server and use etcd client to add/retrive data) defult port 2379
+ In k8s etcd store info about (nodes,pods,configs,secrets,account,roles,binding.....etc)
+ Installation - 1. manual setup from scratch. download etcd binary, installing binary, configuring etcd as service on master (etcd listen on https://<internal ip of server>:2379), configure it on kubeapi server.
+                2. with kubeadm it bydefault deploy etcd as pod in kube-system namespace
+                   *To see data stored in etcd run -> kubectl exec <etcd-podname> -n kube-system etcdctl get / --perfix -keys-only
+				   *it stores data in specific directory. root dir is /registry and under that u have many constructs(minions,pods,replicaset,deployments,roles,secrets,etc..)
+ *In high available env we have 3 master nodes means 3 etcd...here each etcd must know each other so set parameter in etcd service config about controller url.
+ 
+2.Kube-api server -primary management component in k8s
+  kubectl cmd goes to kube-api server, it first authenticate and validate ur req., then it retrives data from etcd and res. back.
+  u can use api to communicate instead of kubectl (curl -X POST /api/v1/namespaces/default/pods....), it also auth,validate and send resp.
+  first new pod info added to etcd via kube-api server and user is notified as pod is created. then scheduler talks to etcd and see 1 new pod, then it checks and select node for scheduling and update api-server which 
+  then add info to etcd and then talks to kubelet of that node to add/create pod. kubelet instruct the cont. runtime engine to deploy the image and then kubelet updates the status to kube-api server and api-server
+  updates the data in etdc.
+  with kubeadm tool if u set up cluster then no need to download and install kube-api but setting cluster hardway then need to download binary and install and configure to run as a service.
+  with kubeadm tool kubeapi server is installed as pod in kube-system ns (cat /etc/kubernetes/manifests/kube-apiserver.yaml)
+  the hard way setup (cat /etc/systemd/system/kube-apiserver.service)
+  
+3. Kube contoller manager- 
+   It manages many cotrollers. continiously looks for status of components and bring it to desired state.
+   1.Node controller - monitor status of the node and take action via api-server. check status every 5 sec.and monitor health.
+                       wait for 40 sec if node is unreachable before marking it unreachable. waits for 5 mins to node to come back up else evict the pods and assign to new node (IF pod is repilicaset)
+   2.Replication controller - monitor status of repilicaset and ensure desired number of pods. if pod dies it creates new one.
+   *Other Controllers (deployment controller, cronJob, replicaset(its old), namespace,endpoint,job, statefulset, PV-protection,PV-binder and many other controllers.)
+   * With installation of kubernetes controller-manager all get installed.    
+   with kubeadm tool Kube contoller manager installed as pod in kube-system ns (cat /etc/kubernetes/manifests/kube-controller-manager.yaml) to check about other controllers
+   the hard way setup (cat /etc/systemd/system/kube-controller-manager.service) to check about other controllers.
+   
+4.Kube scheduler - decide which pod goes on which node, kubelet actually place the pod.
+  Criteria to schedule- 1. filter according to CPU and Memory requirement.
+                        2. uses a priority func. to give score (0-10). checks which node will have more resource left after assigning the pod gets better rank and wins.
+		* Taints and tolerations, node affinity/anti-affinity is also there.
+	u can write ur own scheduler also.
+  Installation same as others.
+  
+5.Kubelet
+  kubelet register node with the cluster, create pod(ask cont runtime engine to create), monitor node and pods and report it to kube-api server
+  always manually deploy kubelet on worker nodes and run it as service.
+  
+6.Kube proxy
+  *In k8s every pod can communicate with other on same/diffrent nodes with some pod networking solution.
+  *Pod network is internal virtual network spans across nodes to which all pods are connected.
+  *if one pod want connect to another pod it needs IP, but pod ip changes if pod die and new pod is up. so we write  service which expose that pod/deployment,service also get an IP so when we access 
+   service it forward our req. to pod.
+   service does not join the pod network coz its not an actual thing like pod. its virtual and only k8s knows. But how a pod finds the service? Kube proxy helps, kube proxy runs on each node.
+   kube proxy continiously check for new service created and it create rule for req. forwarding.(service contain name of deployment,replicaset,pod..)
+   One way of frowarding is 1.IP-tables rules - on all nodes it create table with IP of service to ip of actual pod.
+   *Install- download kube proxy binary, extract and run it as service. Kubeadm tool deploy it as deamonset.
+   
+ 

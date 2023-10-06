@@ -1,0 +1,93 @@
+#Resource requirement and limits
+each node in cluster has set of cpu and memory available. and every pod needs some cpu and memory to run.
+Scheduler takes into account pods resource requirement. if there are no resources available then pod will be in pending state.
+scheduler looks for pods memory req. and find suitable node.
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: myapp
+spec: 
+  containers:
+   - name: myapp-container
+     image: nginx
+  resources:
+    requests:
+	  memory: "4Gi"
+	  cpu: 2
+	limits:
+	  memory: "8Gi"
+	  cpu: 4
+	 
+ defining cpu - 0.1 == 100m (milli), 1 == 1000m 
+                can go low as 1 m not lower than that.
+				1 count == 1 vCPU in aws, 1 core in gcp/azure etc
+ defining memory - 268 Mi(mebibyte), M()Megabyte, 1 Ki(kikibyte),K(Kilobyte), Gi(Gigibyte), G(Gigabyte) (Mi&M,Ki&K,Gi&G are almost equal in bytes)
+ 
+ *Pod can use more than requested resource and use all resource of node but that will chock other pods so we apply resource limit for each pod.
+  what happens when pod try to use more than limit?
+    in case of cpu system throttles the cpu. (Throttle means the performance is slow)
+	in case of memory the pod will be terminated and OOM(out of memory) error will be shown in describe events
+ *By default pod has no request or limit for resource, it can use all resource and chock other pods.
+
+#Situations
+for Cpu
+1. no request and no limit --pod will use all resource if req.
+2. no request but limit applied then request=limit 
+3. both are set (sometimes setting limit is imp)
+4. set request but no limit (ideal - all pods will be gaurented their requested resource but pod can use more if required for time being) 
+
+for Memory
+1. no request and no limit --pod will use all resource if req.
+2. no request but limit applied then request=limit 
+3. both are set (ideal)
+4. set request but no limit (here if pod need more then k8s will kill other pod, can't throttle memory) 
+
+#If we are not using req and limit for pods then we can use limit-range for cpu as some defalut value for all pods in a specific namespace
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: cpu-resource-default
+spec:
+  limits:
+  - default:
+       cpu: 500m
+	defaultRequest:
+	   cpu: 500m
+	max:
+	  cpu: "1"
+    min:
+       cpu: "0.1"
+    type: Container	   
+	
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: memory-resource-default
+spec:
+  limits:
+  - default:
+       memory: 1Gi
+	defaultRequest:
+	   memory: 1Gi
+	max:
+	  memory: 1Gi
+    min:
+       memory: 500Mi
+    type: Container	  
+
+*It does not affect already created pods only new.
+
+
+#Resource Quota
+If we want all pod in a cluster to use certain amount of resources combined then we can create resource quota at namespace level.
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+   name: my-resource-quota
+spec: 
+   hard:
+     request.cpu: 4
+	 request.memory: 4Gi
+	 limits.cpu: 10
+	 limits.memory: 10Gi

@@ -1,0 +1,26 @@
+Its a logical isolation for objects, resources etc
+We have a namespace if we don't create any - default ns. created by k8s at the time of setup
+k8s create some pods and services for internal purpose(for networking solution, dns etc...) under ns kube-system to isolate it from users.
+Resources available for user are cretaen in kube-public ns.
+*Customm namespace to isolate ur different envs and its resources. so no accidental modification to other resources.
+ each ns can have their own set of polocies, like who can do what.
+ can assign certain resource quota to each ns so ns can't use more resource than allowed.
+ 
+ to get resources (pods,services,deploy etc...) for a namespace use
+ kubectl get po --namespace=dev OR kubectl get deploy --n dev
+ kubectl config set-context $(kubectl config current-context) --namespace=dev  (after setting context no need to use namespace flag)
+ kubectl get po --all-namespaces
+ 
+ Creating Resource Quota for ns
+ apiVersion: v1
+ kind: ResourceQuota
+ metadata:
+     name: dev-quota
+	 namespace: dev
+spec:
+   hard:
+     pods: "10"
+	 requests.cpu: "4"
+	 requests.memory: 5Gi
+	 limits.cpu: "10"
+	 limits.memory: 10Gi

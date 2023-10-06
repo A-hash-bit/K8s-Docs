@@ -1,0 +1,54 @@
+Controllers are brains of k8s, it continiously monitors k8s objects and respond accordingly
+1.We need replication controller for high availability. i.e. it maintains desired no of pods in cluster.(1 or 100 desired)
+2.Helps run more multiple instance os pods in cluster. 
+3.Load balancing and scaling as per demand. 
+
+Replication controller is old tech and replaced by replica set 
+new reccomended way for replication. does all things mentioned above
+
+=================================================
+apiVersion: v1 (apps/v1 for replicaset)
+kind: ReplicationController or ReplicaSet
+metadata:---(for rs)
+  name: myapp-rs
+  labels:
+    app: myapp
+	type: front-end
+spec: ---(for rs)
+  replicas: 3
+  selector: (selector is mandatory for replicaset optional for replicationcontroller)
+    matchLables:
+	   type: front-end  (should match with labels of pods.)
+  template:
+    (whole pod defination block)
+    metadata:---(for pod) 
+	  name: myapp-pod
+	  labels:
+	    name: myapp
+		type: front-end
+	spec: ---(for pod) 
+	  containers:
+	    name: my-nginx
+		image: nginx
+  
+  
+  
+
+*selector helps RS to understand what pods are under it. RS can manage pods created via RC object or not just based on lables. should match with labels of pods.
+*If matching labels pods are alredy present then RS won't create new pods. but Template section is required, if RS is monitoring old pods (not created via RS) and they fail, then RS needs a template to recreate it.
+*Update no. of replicas and run--> kubectl replace -f <rs-yaml-file> (it will update the RS) OR 
+ kubectl scale --replicas=5 <RS-file.yml> -n namespace OR 
+ kubectl scale --replicas=5 replicaset myapp-rs -n namespace (widely used) OR
+ kubectl edit rs <rs-name>
+run --> kubectl apply -f <filename>  (it will create pod as per template and no of replicas)
+kubectl get replicationcontroller or rs
+kubectl describe  rs <rs name>
+ kubectl get rs <rs-name>-o yaml > new-replica-set.yaml
+kubectl delete replicaset myapp-rs
+Run the command: kubectl explain replica-set | head -n1 and know the correct value of apiversion for any kind.
+
+
+
+
+
+	   

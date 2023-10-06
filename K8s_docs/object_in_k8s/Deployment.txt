@@ -1,0 +1,63 @@
+
+Why deployment?
+1. Need multiple instances for an image.
+2. Rolling update (Updating instances one by one)
+3. Rollback (if upadated has errors the going back to old version/revision)
+4. Changing underlying web server version,scaling, modifying resource allocations for this u can pause the env. and make changes and then resume.
+
+apiVersion: apps/v1
+kind: Deployment
+metadata: 
+   name: myapp-deploy
+   lables: 
+      app: myapp
+	  type: front-end
+spec: 
+   replicas: 3
+   selector:
+      matchLabels:
+	    type: front-end (same as pod labels)
+   template:
+      metadata:
+	    name: myapp-pod (optional)
+		labels:
+		  app: myapp
+		  type: front-end
+	  spec:
+	    containers:
+		  - name: nginx-container
+		    image: nginx
+			
+=======================================================
+kubectl apply -f deployment.yaml
+kubectl get deployment
+kubectl get deployment <deployment-name> -o yaml
+*Deployment automatically creates a replicaset 
+kubectl get rs (u will see a rs with similar name as deployment with some suffix)
+ and these rs creates pods.
+* pods will have similar name as RS with some suffix.
+
+- kubectl create deployment my-nginx --image=nginx
+  kubectl create deployment my-nginx --image=ninx --dry-run=client -o yaml (to generate deployment file not create)
+  kubectl create deployment my-nginx --image=ninx --dry-run=client -o yaml > mydeployment.yaml
+  kubectl create deployment my-nginx --image=ninx --replicas=4 --dry-run=client -o yaml > mydeployment.yaml (k8s v-1.19+ we can use replicas option here)
+  
+  
+
+		  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Run the command: kubectl explain deployment | head -n1 and know the correct value of apiversion for any kind.
