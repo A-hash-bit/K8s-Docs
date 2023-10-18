@@ -1,1 +1,83 @@
+-let's assume u have pods in cluster and nodeport service to access them on internet (http://<any-node-Ip>:nodeport). and service will distribute traffic to multiple replicas of same pod.
+ but u can't share Ip and nodeport so u configure DNS server to point DNS name to ur Ip(http://dns-name:nodeport), u don't want to share nodeport also. then u can have a proxy server between dns and k8s 
+ service. proxy server will work on default port 80 and send request to nodeport (80 is mapped with nodeport). and u will point ur dns to proxy server.
+     --> http://dns-name --> proxy server --> cluster(node-port) --> pod
+* if u have k8s on cloud platform then u can create service of type LB, k8s will ask cloud provider to create a LB for service. Cloud will provide a NLB. LB will route traffic to service port on all nodes. 
+   LB has external IP which will be configured to dns-name.
 
+# Now u have multiple deployments/app on k8s for diffrent services provided by ur company. Now for each new service u will need to create LB type service with different Ip. Then to give user a single
+  DNS name so we will add a new LB or proxy server which will direct traffic to app specific LB. and we configure based on URL/path to where the req. will go(which app specific LB). LB is expensive.
+
+* Where will u handle all te routing configurations? at proxy-server, at LB or application lavel.
+  K8s gives u option to handle this inside of cluster with simple yaml file as ingress Obj.
+
+# INGRESS- helps users access ur apps using single externally accessible URL. that u can configure to route traffic to diffrent services within cluster based on URL path. also helps implement SSL security.
+  its like a layer7 LB inside k8s cluster. U need expose Ingress to make it accessible to internet via nodeport/LB. 
+  - without ingress will have to deploy reverse-proxy or LB solution llike nginx, HAPROXY. and configure them to route traffic to services depending on URL. and configure SSL etc.
+  - k8s implement ingress same way. u deploy solution like nginx, haproxy, Istio as ingress controller. and configure url/path as ingress resource. ingress controller is not installed by default.
+    * ingress reource is yaml file.
+    * GCE LB (google LB), nginx is supported and maintained by k8s.
+ - load balancing is part of ingress controller, and have many functionalities. It monitor k8s cluster for new ingress resources and configure nginx server accordingly.
+      - to moniter cluster controller needs serviceaccount with role and rolebinding
+ - Deploying ingress controller 
+   - we deploy it as kind deployment obj. wit specific nginx image which is developed as ingress controller.
+     inside service obj.(nodeport type) with selector block will attach ingress to service.
+ *Ingress Resource - are rules about routing traffic based on path.
+    apiVersion: networking.k8s.io/v1
+    kind: Ingress
+    metadata:
+      name: ingress-service
+    spec:
+      backend:
+        service:
+            name: service1     
+            port:
+              number: 80 
+   -----------------------------------
+ apiVersion: networking.k8s.io/v1
+ kind: Ingress
+ metadata:
+   name: ingress-wildcard-host
+ spec:
+  rules:
+  - host: "foo.bar.com"   ---(if u have multiple domain)
+    http:
+      paths:
+      - pathType: Prefix    --(if there is no path only domain the omit pathtype, path fields)
+        path: "/bar"
+        backend:
+          service:
+            name: service1
+            port:
+              number: 80
+      - pathType: Prefix
+        path: "/car"
+        backend:
+          service:
+            name: service3
+            port:
+              number: 80
+  - host: "*.foo.com"     ---(if u have multiple domain)
+    http:
+      paths:
+      - pathType: Prefix   --(if there is no path only domain the omit pathtype, path fields)
+        path: "/foo"
+        backend:
+          service:
+            name: service2
+            port:
+              number: 80
+-------------------------------- 
+u can have diffrent domain names DNS configured to go to same ingress controller service.
+*in above example u can route traffic to services based on host(URL.com) or have rules to route traffic based on path(/bar,/foo). Can have multiple paths under one rule/host.  
+*Always have default backend service if path doesn't match.(may be error page)
+---------------------------------
+
+Rewrite in nginx ingress controller.
+- user will type url/pay but we want just url as target app. is not configured with /pay then we want to exclude /pay or it will through 404.
+  for that we use 
+     metadata:
+       annotations:
+          nginx.ingress.kubernetes.io/rewrite-target: / or nginx.ingress.kubernetes.io/rewrite-target: /$2 
+
+  
