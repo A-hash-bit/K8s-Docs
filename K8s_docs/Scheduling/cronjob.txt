@@ -1,0 +1,26 @@
+
+CronJob is meant for performing regular scheduled actions such as backups, report generation, and so on. 
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+    name: kubernetes-cron-job
+spec:
+  schedule: "0,15,30,45 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            app: cron-batch-job
+        spec:
+          restartPolicy: OnFailure
+          serviceAccountName: app-service-account
+          containers:
+          - name: kube-cron-job
+            image: devopscube/kubernetes-job-demo:latest
+            args: ["100"]
+
+* optional fields
+.spec.startingDeadlineSeconds - if that Job misses its scheduled time,the CronJob skips that instance of the Job (future occurrences are still scheduled). 
+.spec.suspend : true -  all subsequent executions are suspended,until you unsuspend the CronJob.
+.spec.concurrencyPolicy : Allow/forbid/replace (Jobs under one cronJob)
