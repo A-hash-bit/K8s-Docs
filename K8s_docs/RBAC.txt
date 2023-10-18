@@ -1,1 +1,109 @@
+a.verramalla
 What is RBAC?
+- related to security.
+* RBAC can be divided into 2 parts
+  - Users and ServiceAccount(how services/apps manage access in k8s) are 2 responsibility of RBAC
+ 1. User management - 
+    Playing with local k8s cluster u have admin access but in large orgs. every person has diffrent level of access. and k8s admin will define access for users. e.g not able to delete/modify anything
+    on controle-plane. U solve this with RBAC(Role based access control).
+ *How to create users in k8s?
+  - in linux we use useradd to create user. K8s don't do user management but it delegets user management to Identity providers. (OCTA, LDAP or any SSO, Key-clock is popular for k8s)
+    If u are using EKS the use IAM for user management, and with IAM user log into k8s cluster. 
+
+ 2. Service Account - is just a yaml file similar to pod.
+    - let's say u have a pod, so what access this pod have in k8s cluster(access to congifMaps, secrets) or restricting pod to delete any file/folder.
+      By default k8s create a service account for every pod and using that pod can communicate with api server or for connecting to any resource in cluster.
+
+     apiVersion: v1
+     kind: ServiceAccount
+     metadata:
+       name: build-robot
+       automountServiceAccountToken: false
+
+     apiVersion: v1
+     kind: Pod
+     metadata:
+       name: my-pod
+     spec:
+       serviceAccountName: build-robot
+       automountServiceAccountToken: false
+  *  What is api token for serviceAccount? google
+          
+*In k8s u manage RBAC with 
+  1. service Account and users
+  2. Role and clusterRole - 
+     - U will create role for users/serviceAccount, and what access they will have(access to Pods,configMaps,secrets etc.. within same namespace)
+     - U will create clusterRole for users/serviceAccount, and what access they will have(access to Pods,configMaps,secrets etc.. within cluster)
+   * Role is a yaml file where u write what access it will have.
+  3. Role Binding and Cluster RoleBinding
+     - after role is created u will attatch role/clusterRole to user/serviceAccount, and will use Role Binding/clusterRole Binding.
+================================================================================
+ *apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: app-role
+  namespace: webapps
+rules:
+  - apiGroups:
+        - ""
+        - apps
+        - autoscaling
+        - batch
+        - extensions
+        - policy
+        - rbac.authorization.k8s.io
+    resources:
+      - pods
+      - componentstatuses
+      - configmaps
+      - daemonsets
+      - deployments
+      - events
+      - endpoints
+      - horizontalpodautoscalers
+      - ingress
+      - jobs
+      - limitranges
+      - namespaces
+      - nodes
+      - pods
+      - persistentvolumes
+      - persistentvolumeclaims
+      - resourcequotas
+      - replicasets
+      - replicationcontrollers
+      - serviceaccounts
+      - services
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+====================================================================================
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: app-service-account
+  namespace: webapps
+====================================================================================
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: app-rolebinding
+  namespace: webapps 
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: app-role 
+subjects:
+- namespace: webapps 
+  kind: ServiceAccount
+  name: app-service-account
+====================================================================================
+apiVersion: v1
+kind: Pod
+metadata:
+  name: debug
+  namespace: webapps
+spec:
+  containers:
+  - image: bibinwilson/docker-kubectl:latest
+    name: kubectl
+  serviceAccountName: app-service-account
+
