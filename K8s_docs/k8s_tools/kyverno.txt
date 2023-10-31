@@ -1,1 +1,61 @@
-Scanning
+Refer for example and more- https://github.com/kyverno 
+Every org has some rules/compliance. so compliance for deploying new resource in k8s is handled by kyverno.
+It enforces policies, governance and compliance on ur k8s cluster.
+earlier we used to write addmission controller for the same but its hard and complicated.(eg. no latest tag, resource req./limit)
+*admission controller validate, mutate req. of authenticated and authorised user.
+  - its in go lang.
+  - if we have admission controller written and depoyed in k8s,every req. in k8s goes through kubeapi server and then through admission controller which
+    will validate new resources create/update req. against rules.
+
+For every rule we need to write one admission controller and we may have hundreds of them, maintaining and updating(if required) is hard & time consuming.
+* Keyverno creates dynamic admission controller create some webhook config.
+It does 4 things(funcionality):
+ 1. Generate - eg. create network policy whenever a namespace is created.
+ 2. Validate - eg. block user to use latest tag.
+ 3. Mutate - eg. attach pod security policy that is created without any pod security policy config.
+ 4. Verify images - verify images used are properly signed and verfied(OIC policy followed containers).
+
+* Required Infra. 
+  - k8s cluster
+  - install kyverno:
+      * cretate dedicated namespace
+      1. manifest file - https://kyverno.io/docs/installation/
+      2. Helm (Recommended for prod) - https://kyverno.io/docs/installation/
+*Basic kyverno policy yaml file
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: disallow-latest-tag
+  annotations:
+spec:
+  validationFailureAction: audit  -(this action sould be enforce if u want kyverno to work)
+  background: true
+  rules:
+  - name: require-image-tag
+    match:
+      any:
+      - resources:
+          kinds:
+          - Pod
+    validate:
+      message: "An image tag is required."
+      pattern:
+        spec:
+          containers:
+          - image: "*:*"
+  - name: validate-image-tag
+    match:
+      any:
+      - resources:
+          kinds:
+          - Pod
+    validate:
+      message: "Using a mutable image tag e.g. 'latest' is not allowed."
+      pattern:
+        spec:
+          containers:
+          - image: "!*:latest"
+
+----------------
+To use alredy made kyverno policies go to kyverno github link and open the policy in raw yaml format. 
+then kubectl apply -f <raw github link>  will deploy the policy.
