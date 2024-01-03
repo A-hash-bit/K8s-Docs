@@ -73,6 +73,8 @@ On Worker Nodes
 5.Kubelet
   kubelet register node with the cluster, create pod(ask cont runtime engine to create), monitor node and pods and report it to kube-api server
   always manually deploy kubelet on worker nodes and run it as service.
+  * As we have metrics server in K8s to get CPU,RAM metrics of Nodes(Kubectl top nodes) similarly "cAdvisor" can be used to get info about containers.
+   - Can be installed as part of Kubelet installation.
   
 6.Kube proxy
   *In k8s every pod can communicate with other on same/diffrent nodes with some pod networking solution.
