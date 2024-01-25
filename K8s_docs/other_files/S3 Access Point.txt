@@ -1,5 +1,0 @@
-Customers increasingly use Amazon S3 to store shared data.where data is aggregated and accessed by different applications, teams and individuals for various purposes.
-Generally bucket has single bucket policy that controls access for dozens to hundreds of applications/individuals with different permission levels,But it gets complex 
-as user increases and if not done properly it can affect others access.Amazon S3 Access Points,simplify data access for any AWS service or customer application that
-stores data in S3.With S3 access point we can create unique access control policies for each access point to easily control access to S3 data by creating
-individualized access points with names and permissions customized for each application.
