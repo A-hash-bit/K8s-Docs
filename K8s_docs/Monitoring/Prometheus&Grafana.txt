@@ -23,13 +23,16 @@
      $ chmod 700 get_helm.sh
      $ ./get_helm.sh
 # Prometheus
-- helm repo add Prometheus-community https://prometheus-community.github.io/helm-charts
+- helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
 - helm repo update
 - check for charts downloaded
 - helm show values prometheus-community/kube-prometheus-stack > values.yaml    ---change values if u want. this is chartname -prometheus-community/kube-prometheus- 
   stack
 - if done any changes - helm install <release-name> <chart-name> -f values.yaml
 - helm install <some-release-name-prometheus> prometheus-community/kube-prometheus-stack
+- kubectl get ds
+* (Due to a known bug you might need to patch the Prometheus node exporter DaemonSet using below command. )
+- kubectl patch ds prometheus-prometheus-node-exporter --type "json" -p '[{"op": "remove", "path" : "/spec/template/spec/containers/0/volumeMounts/2/mountPropagation"}]'  
 * Things deployed after installations.
  - statefulset (Prometheus server 2 , alert-manager 2 )
  - deployment ( 1 kube state metrics, 1 pod Prometheus operator,3 pod grafana)
@@ -61,6 +64,7 @@
    - on Main page -> search --> {job="node-api"}
 
 * Add Rules --create CRD prometheusrules (similar labes operation as serviceMonitor)
+ - Rules - to add alerts rules
  - kind: PrometheusRule
  - kubectl get prometheusrules 
  - UI-->status -->rules
@@ -88,6 +92,7 @@
 
 
 # For reference youtube - https://www.youtube.com/watch?v=6xmWr7p5TE0
+  - https://kodekloud.com/topic/lab-kubernetes-prometheus-2/
 # https://medium.com/globant/setup-prometheus-and-grafana-monitoring-on-kubernetes-cluster-using-helm-3484efd85891
 
                                                              
