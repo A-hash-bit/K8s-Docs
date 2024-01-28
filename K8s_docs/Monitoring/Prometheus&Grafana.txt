@@ -75,8 +75,19 @@
  - then helm upgrade <some-release-name-prometheus> prometheus-community/kube-prometheus-stack
  - kubectl port-forward service/alertmanager-operated 9093
 
+# Setting Grafana
+- helm repo add grafana https://grafana.github.io/helm-charts
+- helm repo update
+- helm install grafana grafana/grafana
+- kubectl expose service grafana — type=NodePort — target-port=3000 — name=grafana-ext
+- kubectl get secret — namespace default grafana -o yaml
+- echo “password_value” | openssl base64 -d ; echo
+- echo “username_value” | openssl base64 -d ; echo
+* Add prometheus data source into Grafana dashboard
+ - follow the steps from here - https://medium.com/globant/setup-prometheus-and-grafana-monitoring-on-kubernetes-cluster-using-helm-3484efd85891
 
 
 # For reference youtube - https://www.youtube.com/watch?v=6xmWr7p5TE0
+# https://medium.com/globant/setup-prometheus-and-grafana-monitoring-on-kubernetes-cluster-using-helm-3484efd85891
 
                                                              
