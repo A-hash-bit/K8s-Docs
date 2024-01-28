@@ -1,3 +1,82 @@
+# Monitoring Application on k8s and monitoring cluster(underlying infra)
+- We can install prometheus on a server and configure it monitor k8s Or we can directly install prometheus on k8s and configure.
+- Prometheus is close to apps it needs to monitor and no need of different server.
+- We can monitor:
+    - applications
+    - controlplane components - api server, coredns, kube-scheduler..
+    - Kubelet - exposing container metrics.
+    - kube state metrics - cluster level metrics (deployment/pod....metrics)
+- Need Node exporter - Run on all nodes for host metrics (cpu, mem, network) - use deamonset
+- Need kube state metrics pods on all node
+- Service discovery - use k8s API to discover a list of all targets that we need to scrape.
 
+# Prometheus deployment
+- Use helm chart.
+ - https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-prometheus-stack
+ - it deploy everything that we need to deploy and reun prometheus (deploy prometheus operator,alert manager, service/pod monitor, push gateway...) * operator are for CRD's.
+   - check operator - https://github.com/prometheus-operator/prometheus-operator
+- kind: Prometheus
+
+# Install Helm
+ - Go to - https://helm.sh/docs/intro/install
+   - $ curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
+     $ chmod 700 get_helm.sh
+     $ ./get_helm.sh
+# Prometheus
+- helm repo add Prometheus-community https://prometheus-community.github.io/helm-charts
+- helm repo update
+- check for charts downloaded
+- helm show values prometheus-community/kube-prometheus-stack > values.yaml    ---change values if u want. this is chartname -prometheus-community/kube-prometheus- 
+  stack
+- if done any changes - helm install <release-name> <chart-name> -f values.yaml
+- helm install <some-release-name-prometheus> prometheus-community/kube-prometheus-stack
+* Things deployed after installations.
+ - statefulset (Prometheus server 2 , alert-manager 2 )
+ - deployment ( 1 kube state metrics, 1 pod Prometheus operator,3 pod grafana)
+ - deamonset 1 per node (node-exporter) 
+ - services for all as cluster IP, so will need ingress or LB
+   - if we do a port frowarding - kubectl port-forward <prometheus-pod> 9090 --o/p --> will give IP:9090 where u will get prometheus UI.
+   - go to status --> configuration-->its a file(go to scrape config -->kubernetes_sd_configs: uses endpoins to scrape data.) 
+                    *Endpoints have access to everything in k8s, it is used for service discovery.
+
+* deploy ur application ok k8s
+
+* Configure prometheus to scrape ur application or other targets
+ - 1st way (less ideal way) - helm show values prometheus-community/kube-prometheus-stack > values.yaml
+           - go to file -> search Additional scrape configs --> uncomment job/jobs and remove [] or add a job
+                         - scrape_configs:
+                           - job_name: 'your-app'
+                             static_configs:
+                              - targets: ['your-app-service:8080']
+
+ - 2nd way - kubectl get crd --> prometheus monitioring & prometheusrules monitioring(to add scrape targets)
+           - service monitor helps to add targets without touching prometheus config file.
+            - create object of kind:ServiceMonitor and configure it look for a service, configure <port-name>, and jobLabel/job
+    * While creating serviceMonitor keepsits lables- release: prometheus as prometheus by default looks for serviceMonitor with that lable.
+      -kubectl get prometheuses.monitoring.cores.com -o yaml-->search release:prometheus, its value should match with lable of serviceMonitor(release:prometheus)
+      - kubectl get servicemonitor (there are many by default for k8s components & prometheus components)
+ * Note - for Prometheus to scrape metrics from your application running as a pod in Kubernetes, you typically need to expose a metrics endpoint in your 
+          application and configure Prometheus to scrape that endpoint in serviceMonitor. 
+ * go to UI-->status-->targets-->u will see ur job
+   - on Main page -> search --> {job="node-api"}
+
+* Add Rules --create CRD prometheusrules (similar labes operation as serviceMonitor)
+ - kind: PrometheusRule
+ - kubectl get prometheusrules 
+ - UI-->status -->rules
+
+* Alertmanager Rules - create CRD AlertManagerConfig and apply it but first update/add alertmanagerConfigSelector
+ - kubectl get alertmanagers.monitoring.coreos.com -o yaml
+ - prometheus by default deos not gives lable selector.
+ - so helm show values prometheus-community/kube-prometheus-stack > values.yaml --> open the file and add 
+      - alertmanagerConfigSelector:
+             matchLables:
+               resource: prometheus
+ - then helm upgrade <some-release-name-prometheus> prometheus-community/kube-prometheus-stack
+ - kubectl port-forward service/alertmanager-operated 9093
+
+
+
+# For reference youtube - https://www.youtube.com/watch?v=6xmWr7p5TE0
 
                                                              
