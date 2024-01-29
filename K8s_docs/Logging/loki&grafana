@@ -1,0 +1,3 @@
+Loki is used for aggregating logs, promtail fetches the data from log locations.
+- just configure promtail for each log location (var/log/<applicaton>/*log)
+- add loki to data source of grafana.
