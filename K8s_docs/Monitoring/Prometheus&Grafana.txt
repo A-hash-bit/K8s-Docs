@@ -97,6 +97,13 @@
 * Add prometheus data source into Grafana dashboard
  - follow the steps from here - https://medium.com/globant/setup-prometheus-and-grafana-monitoring-on-kubernetes-cluster-using-helm-3484efd85891
 
+* Setting gmail/slack with alertmanager
+- kubectl get svc --(expose as nodeport prometheus-alertmanager)
+- access UI - IP:service-port -->under status --> config(this needs to chnage from cmdline config map)
+- kubectl get cm -->prometheus-alertmanager (need to make changes here for email notification)
+- kubectl edit cm prometheus-alertmanager --> add under reciever email/slack configuration
+- kubectl get cm (configmap)
+
 
 # For reference youtube - https://www.youtube.com/watch?v=6xmWr7p5TE0
   - https://kodekloud.com/topic/lab-kubernetes-prometheus-2/
