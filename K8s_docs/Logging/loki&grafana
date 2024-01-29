@@ -1,3 +1,18 @@
-Loki is used for aggregating logs, promtail fetches the data from log locations.
+Loki is used for aggregating, storing and quering logs, promtail(client) fetches the data from log locations and add lables before pushing it to Loki.
+- Loki has its filesystem where it store data, or it can be stored on s3 also.
+- cost effective as it only index lables(meta data) not whole logs.
 - just configure promtail for each log location (var/log/<applicaton>/*log)
 - add loki to data source of grafana.
+- logql language to query logs
+
+-https://grafana.com/docs/loki/latest/setup/install/
+* for a single server installation
+-https://www.youtube.com/watch?v=0B-yQdSXFJE  (kodekloud youtube)
+ - install grafana, loki & promtail
+ - get/download loki config files and run it & promtail config files (make required change i.e url and add new job if required) and run it
+ - add loki as grafana datasource
+ - in UI - Export --> choose loki --> choose lables, filters, files etc
+
+* for k8s
+- https://www.youtube.com/watch?v=O52dseg2bJo (kodekloud youtube)
+- https://grafana.com/docs/loki/latest/setup/install/helm/
