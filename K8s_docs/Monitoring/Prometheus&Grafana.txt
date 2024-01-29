@@ -1,4 +1,11 @@
 # Monitoring Application on k8s and monitoring cluster(underlying infra)
+* Basic archetecture
+  - it has prometheus server(http server, time series DB, Retrivel) 
+     - http server - u can ask for data to this server with promql -->to Grafana, prometheus UI, API clients
+     - TSDB - to store metrics
+     - Retrival - to retrive data from configured targets.
+  - Alert manager - prom. will push server data to Alert manager for any breach --> mail, slack
+
 - We can install prometheus on a server and configure it monitor k8s Or we can directly install prometheus on k8s and configure.
 - Prometheus is close to apps it needs to monitor and no need of different server.
 - We can monitor:
