@@ -69,7 +69,7 @@ sudo sysctl --system
 sysctl net.bridge.bridge-nf-call-iptables net.bridge.bridge-nf-call-ip6tables net.ipv4.ip_forward
 modprobe br_netfilter
 sysctl -p /etc/sysctl.conf
-Install kubectl, kubelet and kubeadm
+* Install kubectl, kubelet and kubeadm
 apt-get update && sudo apt-get install -y apt-transport-https curl
 curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
 cat <<EOF | sudo tee /etc/apt/sources.list.d/kubernetes.list
@@ -82,6 +82,12 @@ kubeadm version
 Run on Master Node and follow the instructions
 kubeadm config images pull
 kubeadm init
+- with .kube/config kubectl won't be able to run
+- To start using your cluster, you need to run the following as a regular user or if u want root always:
+  mkdir -p $HOME/.kube
+  sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+  sudo chown $(id -u):$(id -g) $HOME/.kube/config
+
 Install any CNI plugin. We will use weavenet
 kubectl apply -f https://github.com/weaveworks/weave/releases/download/v2.8.1/weave-daemonset-k8s.yaml
 Run on Slave Nodes
@@ -89,6 +95,7 @@ Run the join command obtained from kubeadm init output on all Workers nodes. Exa
 
 kubeadm join \
 192.168.56.2:6443 --token … --discovery-token-ca-cert-hash sha256 . . . .
+If worker node have gives error while connecting, try doing - kubeadm reset (it will reset kubeadm settings) 
 Test the setup
 kubectl get nodes
 NAME               STATUS   ROLES           AGE     VERSION
