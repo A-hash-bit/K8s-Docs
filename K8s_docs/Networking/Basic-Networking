@@ -1,0 +1,29 @@
+* This is in terms of linux.
+- Two system/laptops connect with each other via a "Switch", but switch require interface on each system/node (cmd-> ip link) 
+  - [system1](interface)----->---->---[Switch]-----<------<------(interface)[system2] (both use interface to connect to switch)
+- Switch has ip Range and both the system with be configured within that range
+  - ip addr add ipRange/subnet-mask dev eth0 (diffrent ip values for both) [now they are in same network]
+- Now if we want to connect 2 diffrent networks then we need "Router". For 2 networks it has 2 IPs(one from each Ip-range of those network).One for each network connection. 
+- But just Router is not enough, Router is like a room where system/s from both network can come but don't where to go.
+- Gateway is one who tells where to go.
+  -cmd to check if route is configured ->kernel IP routing table or  --> ip route
+  -cmd to configure route ->ip route add <switch 1 ip> via <router ip of opposite network> and vice versa
+  - same configure for other like (internet access)
+
+# DNS configuration
+- so u want to ping/call another system in network by its name.
+  1. -for each system /etc/hosts file --> configure IP <DNS name>   e.g (10.0.0.3 db-server) / here u can have multiple names for 1 IP.
+  2. have a DNS server(named server)which will have all the entries, system will go to DNS server and resolve the name.
+     - to send system to DNS server   /etc/resolve.conf -->nameserver  IP  is configured.
+ * Both /etc/hosts and DNS server can have entry for same name, local host file is used first. but /ect/nsswitch.conf can change the default sequence.
+
+# In general we have root server(.com,.net)--->named server----->Subdomain server(if present)
+* nslookup <DNS name>  will look for info in DNS server
+* dig <DNS name>  -gives info about 
+
+# Network namespaces
+- network namespaces is used by container like docker yo isolate itself from underlying host. container don't have visibility outside, host can see everything.
+- container has its own namespace, interface, routetable...
+- ip netns add <name> to create namespace.
+- ip netns - to list
+- ip link
