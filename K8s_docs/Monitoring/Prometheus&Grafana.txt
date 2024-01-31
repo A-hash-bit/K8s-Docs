@@ -52,6 +52,7 @@
                     *Endpoints have access to everything in k8s, it is used for service discovery.
 
 * deploy ur application ok k8s
+- kubectl expose service prometheus-grafana --type=NodePort --name=grafana-service-1 --port=80 --target-port=3000 -n monitoring
 
 * Configure prometheus to scrape ur application or other targets
  - 1st way (less ideal way) - helm show values prometheus-community/kube-prometheus-stack > values.yaml
@@ -101,6 +102,8 @@ prometheus/
  - then helm upgrade <some-release-name-prometheus> prometheus-community/kube-prometheus-stack -f value.yaml -n <namespace>
  - kubectl port-forward service/alertmanager-operated 9093
 
+
+## Grafana is installed with prometheus chart no need to install it again 
 # Setting Grafana
 - helm repo add grafana https://grafana.github.io/helm-charts
 - helm repo update
