@@ -78,6 +78,7 @@
  - kind: PrometheusRule
  - kubectl get prometheusrules 
  - UI-->status -->rules
+* For serviceMonitor and alert rules see prometheus-rules file (it has yaml)
 
 * Alertmanager Rules - create CRD AlertManagerConfig and apply it but first update/add alertmanagerConfigSelector
  - kubectl get alertmanagers.monitoring.coreos.com -o yaml
