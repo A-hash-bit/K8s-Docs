@@ -87,3 +87,23 @@ spec:
       annotations:
        summary: "Target is down (instance {{ $labels.instance }})"
        description: "The target ({{ $labels.instance }}) is not reachable or is reporting as down."
+
+---
+apiVersion: monitoring.coreos.com/v1alpha1  (issue with apiversion)
+kind: AlertmanagerConfig
+metadata:
+  name: alert-config
+  labels:
+    resource: prometheus
+route:
+  group_by: ['alertname', 'severity']
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 12h
+  receiver: 'webhook'
+
+receivers:
+- name: 'webhook'
+  webhookConfigs:
+   - url: 'http://example.com'
+
