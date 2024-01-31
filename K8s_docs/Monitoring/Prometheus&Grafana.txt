@@ -73,6 +73,17 @@
  * go to UI-->status-->targets-->u will see ur job
    - on Main page -> search --> {job="node-api"}
 
+
+# Basic folder structure for prometheus
+prometheus/
+|-- prometheus.yml
+|-- alertmanager/
+|   |-- alertmanager.yaml
+|   |-- alertmanagerConfig.yaml
+ - alertmanager is seperate component
+ - alertmanager.yaml has global configurations, routes, and inhibit rules.
+ - alertmanagerConfig.yaml used for more advanced configurations beyond the basic setup.(adding email.slack)
+
 * Add Rules --create CRD prometheusrules (similar labes operation as serviceMonitor)
  - Rules - to add alerts rules
  - kind: PrometheusRule
@@ -81,13 +92,13 @@
 * For serviceMonitor and alert rules see prometheus-rules file (it has yaml)
 
 * Alertmanager Rules - create CRD AlertManagerConfig and apply it but first update/add alertmanagerConfigSelector
- - kubectl get alertmanagers.monitoring.coreos.com -o yaml
- - prometheus by default deos not gives lable selector.
+ - kubectl get alertmanagers.monitoring.coreos.com -o yaml 
+ - prometheus by default deos not gives lable selector for alertmanagers.monitoring.coreos.com
  - so helm show values prometheus-community/kube-prometheus-stack > values.yaml --> open the file and add 
-      - alertmanagerConfigSelector:
+      - alertmanagerConfigSelector:      (delete the default {})
              matchLables:
                resource: prometheus
- - then helm upgrade <some-release-name-prometheus> prometheus-community/kube-prometheus-stack
+ - then helm upgrade <some-release-name-prometheus> prometheus-community/kube-prometheus-stack -f value.yaml -n <namespace>
  - kubectl port-forward service/alertmanager-operated 9093
 
 # Setting Grafana
@@ -100,16 +111,6 @@
 - echo “username_value” | openssl base64 -d ; echo
 * Add prometheus data source into Grafana dashboard
  - follow the steps from here - https://medium.com/globant/setup-prometheus-and-grafana-monitoring-on-kubernetes-cluster-using-helm-3484efd85891
-
-# Basic folder structure for prometheus
-prometheus/
-|-- prometheus.yml
-|-- alertmanager/
-|   |-- alertmanager.yaml
-|   |-- alertmanagerConfig.yaml
- - alertmanager is seperate component
- - alertmanager.yaml has global configurations, routes, and inhibit rules.
- - alertmanagerConfig.yaml used for more advanced configurations beyond the basic setup.(adding email.slack)
 
 * Setting gmail/slack with alertmanager
 - kubectl get svc --(expose as nodeport prometheus-alertmanager)
