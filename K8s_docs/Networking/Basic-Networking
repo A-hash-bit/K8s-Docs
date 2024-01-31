@@ -27,3 +27,14 @@
 - ip netns add <name> to create namespace.
 - ip netns - to list
 - ip link
+
+# Netwrk in docker
+* consider l node with docker installed, it will have a network interface(eth0) which connect to local network.
+-1. None network - here conatiner is totally isolated, not part of any network.
+-2. host network - here container uses host network, and only one container can use one port. so can't have containers with same port expose. nodeIP:port.
+                   container uses host's physical port for communication.
+-3. bridge network (default) - a internal private network(172.17.0.0), host and container are attatched to it.
+           - internally it creates a network for each container, which gives isolation but can contact via IP with each other via bridge.
+           - and external can access after port mapping of hostport:conatiner port is done.
+- 
+
