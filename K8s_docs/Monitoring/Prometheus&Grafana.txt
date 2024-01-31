@@ -14,13 +14,13 @@
     - Kubelet - exposing container metrics.
     - kube state metrics - cluster level metrics (deployment/pod....metrics)
 - Need Node exporter - Run on all nodes for host metrics (cpu, mem, network) - use deamonset
-- Need kube state metrics pods on all node
+- Need kube state metrics pods.
 - Service discovery - use k8s API to discover a list of all targets that we need to scrape.
 
 # Prometheus deployment
 - Use helm chart.
  - https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-prometheus-stack
- - it deploy everything that we need to deploy and reun prometheus (deploy prometheus operator,alert manager, service/pod monitor, push gateway...) * operator are for CRD's.
+ - it deploy everything that we need to deploy and run prometheus (deploy prometheus operator,alert manager, service/pod monitor, push gateway...) * operator are for CRD's.
    - check operator - https://github.com/prometheus-operator/prometheus-operator
 - kind: Prometheus
 
@@ -32,12 +32,12 @@
 # Prometheus
 - helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
 - helm repo update
-- check for charts downloaded
-- helm show values prometheus-community/kube-prometheus-stack > values.yaml    ---change values if u want. this is chartname -prometheus-community/kube-prometheus- 
-  stack
+- check for charts downloaded -helm search repo
+- helm show values prometheus-community/kube-prometheus-stack > values.yaml    ---change values if u want. this is chartname -prometheus-community/kube-prometheus-stack
 - if done any changes - helm install <release-name> <chart-name> -f values.yaml
 - helm install <some-release-name-prometheus> prometheus-community/kube-prometheus-stack
-- kubectl get ds
+- helm install <some-release-name-prometheus> prometheus-community/kube-prometheus-stack --debug (use debug to see details of install/upgrade)
+- kubectl get ds  - o/p kubectl get ds
 * (Due to a known bug you might need to patch the Prometheus node exporter DaemonSet using below command. )
 - kubectl patch ds prometheus-prometheus-node-exporter --type "json" -p '[{"op": "remove", "path" : "/spec/template/spec/containers/0/volumeMounts/2/mountPropagation"}]'  
 * Things deployed after installations.
@@ -45,7 +45,9 @@
  - deployment ( 1 kube state metrics, 1 pod Prometheus operator,3 pod grafana)
  - deamonset 1 per node (node-exporter) 
  - services for all as cluster IP, so will need ingress or LB
-   - if we do a port frowarding - kubectl port-forward <prometheus-pod> 9090 --o/p --> will give IP:9090 where u will get prometheus UI.
+   - if we do a port frowarding - kubectl port-forward <prometheus-pod> 9090 --o/p --> will give 127.0.0.1:9090 where u will get prometheus UI. OR
+   - kubectl expose service prometheus-kube-prometheus-prometheus --type=NodePort --name=prom-service --port=9090 --target-port=9090 -n monitoring  
+      --access via IP:nodeport
    - go to status --> configuration-->its a file(go to scrape config -->kubernetes_sd_configs: uses endpoins to scrape data.) 
                     *Endpoints have access to everything in k8s, it is used for service discovery.
 
@@ -60,6 +62,7 @@
                               - targets: ['your-app-service:8080']
 
  - 2nd way - kubectl get crd --> prometheus monitioring & prometheusrules monitioring(to add scrape targets)
+             - this is a custom resource - servicemonitors.monitoring.coreos.com for service monitoring
            - service monitor helps to add targets without touching prometheus config file.
             - create object of kind:ServiceMonitor and configure it look for a service, configure <port-name>, and jobLabel/job
     * While creating serviceMonitor keepsits lables- release: prometheus as prometheus by default looks for serviceMonitor with that lable.
