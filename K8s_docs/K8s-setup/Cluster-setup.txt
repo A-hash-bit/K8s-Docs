@@ -109,7 +109,7 @@ kubectl expose pod nginx --port=80 --type=NodePort
 
 
 #### Additional cluster requirements:
-# Install metrics server 
+# Install metrics server  (facing issue with helm-chart)
 - helm repo add metrics-server https://kubernetes-sigs.github.io/metrics-server/
 - helm install metrics-server metrics-server/metrics-server -n kube-system
 - kubectl get pods -n kube-system | grep metrics-server
