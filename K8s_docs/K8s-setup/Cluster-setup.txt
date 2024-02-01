@@ -124,7 +124,7 @@ Reference - https://docs.k0sproject.io/v1.28.4+k0s.0/examples/nginx-ingress/
 - kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.1.3/deploy/static/provider/baremetal/deploy.yaml --namespace=ingress-nginx
   - it create roles, cluster roles, role/clusterrole binding, addmission pods. , controller pod etc...
 - kubectl get pods -n ingress-nginx
-- kubectl get services -n ingress-nginx
+- kubectl get services -n ingress-nginx        --------(created a ingress but not able to access app with curl??) - kubectl get endpoints web-server-service -n web (to curl ur app. with endpoint)
 
 ___________________________________________________________
 HA K8s Cluster Setup using Kubeadm
