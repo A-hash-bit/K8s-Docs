@@ -16,3 +16,48 @@ Loki is used for aggregating, storing and quering logs, promtail(client) fetches
 * for k8s
 - https://www.youtube.com/watch?v=O52dseg2bJo (kodekloud youtube)
 - https://grafana.com/docs/loki/latest/setup/install/helm/
+#Install on k8s
+- helm repo add grafana https://grafana.github.io/helm-charts
+- helm repo update
+- helm search repo loki
+- kubectl create namespace logging
+- helm show values grafana/loki-stack > loki-values.yalm
+- open the file set grafana: true.
+- helm install loki grafana/loki-stack --values loki-values.yaml -n logging
+- use new grafana server or use already installed with prometheus - check monitoring folder
+- kubectl expose service loki --type=NodePort --name=loki-service --port=3100 --target-port=3100 -n logging     - (loki is giving 404) (wanted to configure loki with other grafana/prometheus)
+- kubectl get svc -n logging
+- so now kubectl expose service loki-grafana --type=NodePort --name=grafana-service --port=8080 --target-port=3000 -n logging  (with this the loki will be [re configured)
+- kubectl get secret — namespace default grafana -o yaml
+- echo “password_value” | openssl base64 -d ; echo
+- echo “username_value” | openssl base64 -d ; echo
+
+# promtail is fetching logs-
+- kubectl get secret
+- kubectl describe  secret loki-promtail
+  kubectl get secret -n logging
+   kubectl describe secret loki-promtail -n logging
+   kubectl get  secret loki-promtail -o jsonpath="{.data.promtail\.yaml}" -n logging
+   kubectl get  secret loki-promtail -o jsonpath="{.data.promtail\.yaml}" -n logging | base64 --decode  (to see scrape congif values/setting)
+- deploy a app -(use image - kodekloud/loki-demo it has log location and logging enabled)  by default u will get logs for custom app. in grafana, no need to change any scrape config of promtail.
+- but if u want to set custom lables for search in grafana then :
+   - kubectl get  secret loki-promtail -o jsonpath="{.data.promtail\.yaml}" -n logging | base64 --decode > ptail.yaml
+   - under pipeline_stages: --> - match: 
+                                    selector: '{<app-deployemt.templte.lables>}'    --(app:my-api)
+                                    stages:
+                                     - json:
+                                           expression:
+                                              log:
+                                     - json:
+                                          source: log
+                                          expression:
+                                              code: code 
+                                              method: method
+                                      - labels:
+                                            code:
+                                            method:
+     kubectl delete secret loki-promtail  (delete old)
+     kubectl create secret generic loki-promtail --from-file=./ptail.yaml             (now in grafana u can use lables as filter for ur app. for logs)
+
+
+
