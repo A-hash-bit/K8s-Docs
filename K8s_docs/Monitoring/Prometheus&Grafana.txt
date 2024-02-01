@@ -130,7 +130,7 @@ prometheus/
 - access UI - IP:service-port -->under status --> config(this needs to chnage from cmdline config map)
 - kubectl get cm -->prometheus-alertmanager (need to make changes here for email notification)
 - kubectl edit cm prometheus-alertmanager --> add under reciever email/slack configuration
-- kubectl get cm (configmap)
+- kubectl get cm (configmap)  
 
 
 # For reference youtube - https://www.youtube.com/watch?v=6xmWr7p5TE0
