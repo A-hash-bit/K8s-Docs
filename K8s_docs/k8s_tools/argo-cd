@@ -1,0 +1,14 @@
+# Argo-CD is a GitOps tool.
+- We use git for source code and connect it to CI(jenkins) tool for continious integration. And same can be applied to kubernetes manifest also.
+- git will single point of truth for Argo-CD and chnages can be pulled or pushed.
+- deploy Argo-CD controller on k8s.
+- if someone make manual change to k8s cluster then Argo overrides it. It keeps cache of k8s state and continiously compares it with GIT.
+- maintain version for manifest.
+
+# Architecture of Argo-CD
+- Components - 
+      1. Repo server - which get git state.
+      2. Application controller - talk to k8s and get its state.
+      3. Api server - user can talk to argo with api server, it does authentication of user
+      4. dex server - its a proxy server which gets info from any directory of user.
+      5. redis - to cache state of Argo components.
