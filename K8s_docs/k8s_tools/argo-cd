@@ -9,6 +9,35 @@
 - Components - 
       1. Repo server - which get git state.
       2. Application controller - talk to k8s and get its state.
-      3. Api server - user can talk to argo with api server, it does authentication of user
-      4. dex server - its a proxy server which gets info from any directory of user.
+      3. Argo server - user can talk to argo with api server, it does authentication of user
+      4. dex server - its a proxy server which gets info from any directory of user.( u can configure it with ur identity provider)
       5. redis - to cache state of Argo components.
+      6. notification controller - new addition after v2.5
+
+## Install
+- kubectl create namespace argocd
+- kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml -n argocd
+   OR  - https://github.com/argoproj/argo-cd/releases/tag/v2.10.0  check here for specific version and HA(high availablity)/non HA installation
+- kubectl expose service argocd-server --type=NodePort --name=my-argo-service --port=9012 --target-port=8080 -n argocd   (to access UI) -serverIP:nodeport
+- kubectl get secret argocd-initial-admin-secret -o yaml -n argocd
+- echo "passwd" | base64 -d           (uname- admin)
+- for new application - click new app, configure - name, git url, branch, auto/manual sync etc.....
+* after creating app - u can redeploy a version or rollback to old version.
+* Need some configurations 
+ - under settings - add repos(public/private), add clusters, add project - then these valuse will be available to u at the time of add/create app.
+
+# Multiple cluster deployment
+1. Deploy Argo on each cluster (dev,stage.qa.prod)
+2. Deploy Argo on one cluster and with argo cli deploy on other closters   (Hub-Spoke model)
+   - install Argo CLI
+   - Argo login - argocd login <ur-argo-IP:nodeport>  --> pass uname & passwd
+   - argocd cluater add <cluster-context> --server <ur-argo-IP:nodeport>   (u can't add cluster via UI)  - then u can see cluster in UI
+* how to add git private repo in argo 
+ - https://github.com/argoproj/argo-cd/blob/master/docs/user-guide/private-repositories.md
+ - https://argo-cd.readthedocs.io/en/release-1.8/user-guide/private-repositories/
+- argocd repo add https://github.com/A-hash-bit/pri-argocd-example-apps.git --username A-hash-bit --password <github-token>
+
+
+#Argo on jenkins
+ * Argo CLI - if u want to create and do more from jenkins
+ * Argo Argo Workflow Plugin or Argo CD Plugin - for simple deployments
