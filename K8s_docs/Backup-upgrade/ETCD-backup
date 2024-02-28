@@ -1,0 +1,36 @@
+* This way of backup works with cluster created by kubeadm
+* Installation by kubeadm, it create all pods(controlplane,node components asstatic pods)
+Prerequiste:
+1. Check etcdctl --version  (command line tool for interacting with etcd server) 
+   - API version need to be 
+   - refer - https://etcd.io/docs  check for installation of particular version.
+     - $ git clone -b v3.5.11 https://github.com/etcd-io/etcd.git
+     - $ cd etcd
+     - $ ./build.sh
+
+2. Check the api version and version of etcdctl 
+  - etcdctl --version (if API version is 2 the use "ETCDCTL_API=3" before every etcdctl cmd if API version is 3 the u can ignore it.) 
+3. Check ETCD pod.
+  - kubectl get po -n kube-system
+  - kubectl describe po <pod-name-of-etcd> -n kube-system
+
+4. Backup 
+- ETCDCTL_API=3 etcdctl --endpoints=https://127.0.0.1:2379 \
+  --cacert=<trusted-ca-file> --cert=<cert-file> --key=<key-file> \
+  snapshot save <backup-file-location>
+- Get the cacert,cert,key values - kubectl describe po <pod-name-of-etcd> -n kube-system  & endpoint is same
+- give some file location (/opt/snapshot.db)
+- and run it.
+
+5. Make the etcd stop such that it stop responding - u won't get any response to kubectl get po etc.
+6. Restore ETCD.
+- ETCDCTL_API=3 etcdctl --data-dir <data-dir-location> snapshot restore /opt/snapshot.db
+  - data-dir-location - /var/lib/etcd-backup
+* Now the backup file is restored, but the static pod of etcd still trying try to get its info from the old location(/var/lib/etcd). so need to change it.
+  - cd /etc/kubernetes/manifest  (at this location all the static pods yaml is present)
+  - vi etcd.yaml  and chnage the - hostPath: path: /var/lib/etcd-backup
+- check kubectl cmds now to confirm.
+
+ 
+
+ 
