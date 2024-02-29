@@ -1,3 +1,28 @@
 - upgrade with kubeadm utility
-- first upgrade master the worker
-- 
+- k8s support 3 minor release
+- if kube-apiserver is V1.x then controller & scheduler can be V1.x or V1.x-1
+- if kube-apiserver is V1.x then kubelet & kube-proxy can be V1.x or V1.x-1 or V1.x-2
+- if kube-apiserver is V1.x then kubectl can be V1.x or V1.x-1 or V1.x+1
+* General steps
+- first upgrade master then worker node 
+* CMDs
+- On Maste Node
+- kubectl get node -->give info about node status, version etc.
+- kubeadm upgrade plan           --optional 
+- kubectl drain controlplane --ignore-deamonsets       (it will evict pods from master and put them onto worker)
+- apt update
+- apt install kubeadm=<Version to upgrade>      (1.19.0-00)
+- kubeadm upgrade apply <Version to upgrade>    (1.19.0-00)
+- apt install kubelet=<Version to upgrade>      (1.19.0-00)
+- Systemctl restart kubelet
+- Kubectl uncordon controlplane
+- On Worker Node
+- kubectl drain <worker-node-name> --ignore-deamonsets     (it will evict pods from node1 and put them onto other worker/ controlplane)
+- ssh <worker-node-name>               ---> to ssh into node
+- apt update
+- apt install kubeadm=<Version to upgrade>      (1.19.0-00)
+- kubeadm upgrade node
+- apt install kubelet=<Version to upgrade>      (1.19.0-00)
+- Systemctl restart kubelet
+- control+d to  exit    ---> come out of node
+- Kubectl uncordon <worker-node-name>
