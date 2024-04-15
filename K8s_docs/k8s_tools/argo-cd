@@ -50,3 +50,4 @@
 --dest-server https://kubernetes.default.svc
 
 - argocd app sync solar-system-app-2
+- get app list
