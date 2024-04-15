@@ -48,3 +48,5 @@
 --path <helm/manifest files> \
 --dest-namespace <name-space> \
 --dest-server https://kubernetes.default.svc
+
+- argocd app sync solar-system-app-2
