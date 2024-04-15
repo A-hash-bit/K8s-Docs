@@ -42,3 +42,9 @@
 #Argo on jenkins
  * Argo CLI - if u want to create and do more from jenkins
  * Argo Argo Workflow Plugin or Argo CD Plugin - for simple deployments
+# How to create argocd application using cli?
+- argocd app create <app-name> \
+--repo <git-url> \
+--path <helm/manifest files> \
+--dest-namespace <name-space> \
+--dest-server https://kubernetes.default.svc
