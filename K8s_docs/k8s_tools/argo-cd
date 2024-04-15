@@ -14,7 +14,7 @@
       5. redis - to cache state of Argo components.
       6. notification controller - new addition after v2.5
 
-## Install
+## Install - https://github.com/argoproj/argo-cd/releases
 - kubectl create namespace argocd
 - kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml -n argocd
    OR  - https://github.com/argoproj/argo-cd/releases/tag/v2.10.0  check here for specific version and HA(high availablity)/non HA installation
@@ -29,7 +29,8 @@
 # Multiple cluster deployment
 1. Deploy Argo on each cluster (dev,stage.qa.prod)
 2. Deploy Argo on one cluster and with argo cli deploy on other closters   (Hub-Spoke model)
-   - install Argo CLI
+   - install Argo CLI  - curl -sSL -o /usr/local/bin/argocd https://github.com/argoproj/argo-cd/releases/download/v2.4.11/argocd-linux-amd64
+                       - chmod +x /usr/local/bin/argocd
    - Argo login - argocd login <ur-argo-IP:nodeport>  --> pass uname & passwd
    - argocd cluater add <cluster-context> --server <ur-argo-IP:nodeport>   (u can't add cluster via UI)  - then u can see cluster in UI
 * how to add git private repo in argo 
