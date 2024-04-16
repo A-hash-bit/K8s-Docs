@@ -61,3 +61,7 @@
      timeout.reconciliation: 60s
 OR
 - we can have git webhook 
+
+# ArgoCD health check
+- it checks for health of pod/deployemts etc (There are default checks for different k8s objects)
+- we can write custom health checks also
