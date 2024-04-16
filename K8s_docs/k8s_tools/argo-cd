@@ -65,3 +65,31 @@ OR
 # ArgoCD health check
 - it checks for health of pod/deployemts etc (There are default checks for different k8s objects)
 - we can write custom health checks also
+
+# We can create argo application with declarative approach (argo manifest)
+# Apps of Apps helps to create multiple argo app programatically --> all argo manifestes will be saved in a folder for diffrent microservices
+- you will have a app-of-apps.yaml which will refer to all argo-app.yaml present in a single folder which will refer to other microservices folder for manifest.
+
+## USING HELM
+
+## Add new cluster via cli
+
+## RBAC with argocd
+- we create a csv file with policy and add/patch argocd-rbac-cm 
+
+## ArgoCD user management
+-> argocd account list (show all users) admin is default with root privileges
+- user management can be done local or with SSO 
+- user can be added with argocd configmap
+
+## For secret use BITNAMI SEALED SECRET controller & then you can save secrets on GIT
+- install bitnami sealed secret controller with helm or manifest
+- download kubeseal client which does encrypt/decrypt of secrets
+OR 
+Use hashicorp vault
+- download argocd vault plugin  to fetch secrets from hashicorp vault
+
+## Monitoring Argocd with prometheus & Grafana
+
+## Argocd Notifications to slack, email
+
