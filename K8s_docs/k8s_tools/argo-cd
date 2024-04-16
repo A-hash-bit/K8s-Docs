@@ -56,7 +56,7 @@
 - (how often argo fetch from git?) - generally sync every 3 mins.
  - this behaviour can be changed by looking at env var in argo server pod (ARGOCD_RECONSILIATION_TIMEOUT) which gets value from a configmap(argocd-cm)
    - kubectl edit configmaps argocd-cm -n argocd
- - add timeout reconciliation: 100s  (any value) under metadata
+ - add timeout reconciliation: 100s  (any value) parallel metadata
    - data:
      timeout.reconciliation: 60s
 OR
